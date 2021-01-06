@@ -14,10 +14,12 @@
 *.a
 
 # Visual Studio Files
+.vs/
 Debug
 Release
 *.suo
 *.csproj.user
 *.vbproj.user
+*.
 ipch
 *sdf
