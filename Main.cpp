@@ -38,6 +38,9 @@ class LeadVisualizer : public olc::PixelGameEngine
 
 private:
 	LinearTargetStation* station;
+	float xOffset = 0;
+	float yOffset = 0;
+	float cameraSpeed = 0.5f;
 
 
 public:
@@ -63,15 +66,25 @@ public:
 
 	bool OnUserUpdate(float fElapsedTime) override
 	{
+		if (GetKey(olc::Key::LEFT).bHeld) xOffset += cameraSpeed;
+		if (GetKey(olc::Key::RIGHT).bHeld) xOffset -= cameraSpeed;
+		if (GetKey(olc::Key::UP).bHeld) yOffset += cameraSpeed;
+		if (GetKey(olc::Key::DOWN).bHeld) yOffset -= cameraSpeed;
+
+		if (GetMouseWheel() > 0) cameraSpeed += 0.5f;
+		if (GetMouseWheel() < 0) cameraSpeed -= 0.5f;
+		if (cameraSpeed < 0) cameraSpeed = 0;
+
+
 		LinearTarget t = station->getTarget();
 		Clear(olc::Pixel(154, 203, 255));
 		drawFlightpathLine(t.flightpath(0, 1500, 1));
 
 		station->tick(fElapsedTime);
 
-		Vector2D pos = t.currentPosition();
-		Vector2D leadPos = station->currentLeadPosition();
-		Vector2D shooterPos = station->getShooter().getPosition();
+		Vector2D pos = worldToScreenCoords(t.currentPosition());
+		Vector2D leadPos = worldToScreenCoords(station->currentLeadPosition());
+		Vector2D shooterPos = worldToScreenCoords(station->getShooter().getPosition());
 
 		DrawLine(shooterPos.X(), shooterPos.Y(), leadPos.X(), leadPos.Y(), olc::MAGENTA);
 		FillCircle(pos.X(), pos.Y(), 10, olc::Pixel(255,94,19));
@@ -105,8 +118,8 @@ public:
 	*/
 	void drawFlightpathLine(const std::vector<Vector2D>& path) {
 		for (int i = 0; i < path.size() - 1; ++i) {
-			Vector2D cpos = path[i];
-			Vector2D npos = path[i + 1];
+			Vector2D cpos = worldToScreenCoords(path[i]);
+			Vector2D npos = worldToScreenCoords(path[i + 1]);
 			DrawLine(cpos.X(), cpos.Y(), npos.X(), npos.Y(), olc::RED);
 		}
 	}
@@ -114,6 +127,7 @@ public:
 	Vector2D worldToScreenCoords(const Vector2D& worldCoords) {
 		// TODO implement this to map the world coords centered at 0,0 to screen coords
 		// and account for camera motion
+		return worldCoords + Vector2D(xOffset, yOffset);
 	}
 
 };
