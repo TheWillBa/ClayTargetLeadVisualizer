@@ -29,10 +29,15 @@ Center the world at (0,0)?
 #define OLC_PGE_APPLICATION
 #include <iostream>
 #include "olcPixelGameEngine.h"
+#include "Target.h"
 
 // Override base class with your custom functionality
 class LeadVisualizer : public olc::PixelGameEngine
 {
+private:
+	Target* t;
+
+
 public:
 	LeadVisualizer()
 	{
@@ -43,16 +48,28 @@ public:
 public:
 	bool OnUserCreate() override
 	{
+
+		t = new Target(0, ScreenHeight() / 2);
+		
 		// Called once at the start, so create things here
 		return true;
 	}
 
 	bool OnUserUpdate(float fElapsedTime) override
 	{
-		// Called once per frame, draws random coloured pixels
-		for (int x = 0; x < ScreenWidth(); x++)
-			for (int y = 0; y < ScreenHeight(); y++)
-				Draw(x, y, olc::Pixel(rand() % 256, rand() % 256, rand() % 256));
+		
+		t->update(fElapsedTime);
+		Vector2D pos = t->position();
+		Draw(pos.X(), pos.Y());
+
+		return true;
+		
+	}
+
+	bool OnUserDestroy() override
+	{
+		// Called when window is closed
+		delete t;
 		return true;
 	}
 };
@@ -60,7 +77,7 @@ public:
 int main()
 {
 	LeadVisualizer demo;
-	if (demo.Construct(256, 240, 4, 4))
+	if (demo.Construct(50, 50, 4, 4))
 		demo.Start();
 	return 0;
 }
