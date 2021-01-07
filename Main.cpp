@@ -36,14 +36,13 @@ class LeadVisualizer : public olc::PixelGameEngine
 {
 private:
 	Target* t;
-	//olc::Pixel prevColor;
 
 
 public:
 	LeadVisualizer()
 	{
 		// Name you application
-		sAppName = "Example";
+		sAppName = "Lead Visualization";
 	}
 
 public:
@@ -55,11 +54,7 @@ public:
 		//prevColor = p;
 	
 		std::vector path = flightpath(*t, 0, 1500, 0.005);
-
-		for (int i = 0; i < path.size(); ++i) {
-			Vector2D cpos = path[i];
-			FillCircle(cpos.X(), cpos.Y(), 10, olc::RED);
-		}
+		drawFlightpathCircle(path);
 		
 		// Called once at the start, so create things here
 		return true;
@@ -86,6 +81,27 @@ public:
 		// Called when window is closed
 		delete t;
 		return true;
+	}
+
+	/*
+	Draws a flight path by drawing a circle at each point on it
+	*/
+	void drawFlightpathCircle(const std::vector<Vector2D>& path) {
+		for (int i = 0; i < path.size(); ++i) {
+			Vector2D cpos = path[i];
+			FillCircle(cpos.X(), cpos.Y(), 10, olc::RED);
+		}
+	}
+
+	/*
+	Draws a flight path by connecting each point with a line
+	*/
+	void drawFlightpathLine(const std::vector<Vector2D>& path) {
+		for (int i = 0; i < path.size() - 1; ++i) {
+			Vector2D cpos = path[i];
+			Vector2D npos = path[i + 1];
+			DrawLine(cpos.X(), cpos.Y(), npos.X(), npos.Y(), olc::RED);
+		}
 	}
 };
 
