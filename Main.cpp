@@ -36,6 +36,7 @@ class LeadVisualizer : public olc::PixelGameEngine
 {
 private:
 	Target* t;
+	//olc::Pixel prevColor;
 
 
 public:
@@ -50,6 +51,15 @@ public:
 	{
 
 		t = new Target(0, ScreenHeight() / 2);
+		//olc::Pixel p(olc::BLACK);
+		//prevColor = p;
+	
+		std::vector path = flightpath(*t, 0, 1500, 0.005);
+
+		for (int i = 0; i < path.size(); ++i) {
+			Vector2D cpos = path[i];
+			FillCircle(cpos.X(), cpos.Y(), 10, olc::RED);
+		}
 		
 		// Called once at the start, so create things here
 		return true;
@@ -57,10 +67,15 @@ public:
 
 	bool OnUserUpdate(float fElapsedTime) override
 	{
-		
+		Vector2D oldPos = t->position();
 		t->update(fElapsedTime);
 		Vector2D pos = t->position();
-		Draw(pos.X(), pos.Y());
+
+		FillCircle(oldPos.X(), oldPos.Y(), 10, olc::RED);
+		FillCircle(pos.X(), pos.Y(), 10);
+
+
+
 
 		return true;
 		
@@ -77,7 +92,7 @@ public:
 int main()
 {
 	LeadVisualizer demo;
-	if (demo.Construct(50, 50, 4, 4))
+	if (demo.Construct(600, 600, 1, 1))
 		demo.Start();
 	return 0;
 }

@@ -1,5 +1,6 @@
 #pragma once
 #include "Vector2D.h"
+#include <vector>
 class Target
 {
 private:
@@ -16,4 +17,6 @@ public:
 	void update(double dtime);
 
 };
+
+std::vector<Vector2D> flightpath(Target t, double start, double end, double step);
 
