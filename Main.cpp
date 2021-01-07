@@ -34,6 +34,8 @@ Center the world at (0,0)?
 // Override base class with your custom functionality
 class LeadVisualizer : public olc::PixelGameEngine
 {
+	// TODO: allows for the viewer to move the top down camera to move around the world
+
 private:
 	Target* t;
 
@@ -49,12 +51,8 @@ public:
 	bool OnUserCreate() override
 	{
 
-		t = new Target(0, ScreenHeight() / 2);
-		//olc::Pixel p(olc::BLACK);
-		//prevColor = p;
-	
-		std::vector path = flightpath(*t, 0, 1500, 0.005);
-		drawFlightpathCircle(path);
+		t = new Target();
+
 		
 		// Called once at the start, so create things here
 		return true;
@@ -62,18 +60,14 @@ public:
 
 	bool OnUserUpdate(float fElapsedTime) override
 	{
-		Vector2D oldPos = t->position();
+		Clear(olc::Pixel(154, 203, 255));
+		drawFlightpathLine(t->flightpath(0, 1500, 0.5));
+
 		t->update(fElapsedTime);
 		Vector2D pos = t->position();
+		FillCircle(pos.X(), pos.Y(), 10, olc::Pixel(255,94,19));
 
-		FillCircle(oldPos.X(), oldPos.Y(), 10, olc::RED);
-		FillCircle(pos.X(), pos.Y(), 10);
-
-
-
-
-		return true;
-		
+		return true;		
 	}
 
 	bool OnUserDestroy() override
@@ -103,6 +97,12 @@ public:
 			DrawLine(cpos.X(), cpos.Y(), npos.X(), npos.Y(), olc::RED);
 		}
 	}
+
+	Vector2D worldToScreenCoords(const Vector2D& worldCoords) {
+		// TODO implement this to map the world coords centered at 0,0 to screen coords
+		// and account for camera motion
+	}
+
 };
 
 int main()

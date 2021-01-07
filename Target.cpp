@@ -1,39 +1,46 @@
 #include "Target.h"
 
+/*
+For now at least:
+values for distances are in feet
+values for time are in seconds
+
+
+the world will be centered around the point (0,0)
+
+*/
+
 Target::Target() : totalTimeElapsed(0) {
-	Vector2D v(0, 0);
-	pos = v;
+	currentPos = position(0);
+	initialPos = currentPos;
 };
 
-Target::Target(double x, double y) : totalTimeElapsed(0) {
-	Vector2D v(x, y);
-	pos = v;
-};
 
-// The velocity of the target at time time
-Vector2D Target::velocity(double time) {
-	// can return based on more complex functions
-	Vector2D v(75, -cos(time) * 150);
-	return v;
+Vector2D Target::position() {
+	return currentPos;
 }
 
-const Vector2D& Target::position() {
-	return pos;
+Vector2D Target::position(double time) {
+	// Currently a target that just moves in a straight line
+
+	// Expand on this with different types of 2d targets?
+	// make into a small demo game?
+
+	// Make this position function driven by the initial position, not the other way around as is it now
+	return Vector2D(62 * time, 40 * time) + Vector2D(0, 100);
 }
 
 void Target::update(double dtime) {
-	Vector2D vel = velocity(totalTimeElapsed) * dtime;
-	pos = pos + vel;
+	currentPos = position(totalTimeElapsed);
 	totalTimeElapsed += dtime;
 }
 
 
-std::vector<Vector2D> flightpath(Target t, double start, double end, double step) {
+std::vector<Vector2D> Target::flightpath(double start, double end, double step) {
 	std::vector<Vector2D> path;
 	double time = start;
 	do {
-		path.push_back(t.position());
-		t.update(step);
+		path.push_back(position(time));
 		time += step;
 	} while (time <= end);
 
