@@ -66,10 +66,10 @@ public:
 
 	bool OnUserUpdate(float fElapsedTime) override
 	{
-		if (GetKey(olc::Key::LEFT).bHeld) xOffset += cameraSpeed;
-		if (GetKey(olc::Key::RIGHT).bHeld) xOffset -= cameraSpeed;
-		if (GetKey(olc::Key::UP).bHeld) yOffset += cameraSpeed;
-		if (GetKey(olc::Key::DOWN).bHeld) yOffset -= cameraSpeed;
+		if (GetKey(olc::Key::LEFT).bHeld || GetKey(olc::Key::A).bHeld) xOffset += cameraSpeed;
+		if (GetKey(olc::Key::RIGHT).bHeld || GetKey(olc::Key::D).bHeld) xOffset -= cameraSpeed;
+		if (GetKey(olc::Key::UP).bHeld || GetKey(olc::Key::W).bHeld) yOffset += cameraSpeed;
+		if (GetKey(olc::Key::DOWN).bHeld || GetKey(olc::Key::S).bHeld) yOffset -= cameraSpeed;
 
 		if (GetMouseWheel() > 0) cameraSpeed += 0.5f;
 		if (GetMouseWheel() < 0) cameraSpeed -= 0.5f;
