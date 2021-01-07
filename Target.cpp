@@ -11,8 +11,13 @@ the world will be centered around the point (0,0)
 */
 
 Target::Target() : totalTimeElapsed(0) {
-	currentPos = position(0);
-	initialPos = currentPos;
+	currentPos = Vector2D(0, 0);
+	initialPos = Vector2D(0, 0);
+};
+
+Target::Target(double xStart, double yStart) : totalTimeElapsed(0) {
+	initialPos = Vector2D(xStart, yStart);
+	currentPos = initialPos;
 };
 
 
@@ -20,15 +25,6 @@ Vector2D Target::position() {
 	return currentPos;
 }
 
-Vector2D Target::position(double time) {
-	// Currently a target that just moves in a straight line
-
-	// Expand on this with different types of 2d targets?
-	// make into a small demo game?
-
-	// Make this position function driven by the initial position, not the other way around as is it now
-	return Vector2D(62 * time, 40 * time) + Vector2D(0, 100);
-}
 
 void Target::update(double dtime) {
 	currentPos = position(totalTimeElapsed);

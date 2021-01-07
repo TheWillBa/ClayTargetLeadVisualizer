@@ -29,7 +29,7 @@ Center the world at (0,0)?
 #define OLC_PGE_APPLICATION
 #include <iostream>
 #include "olcPixelGameEngine.h"
-#include "Target.h"
+#include "LinearTarget.h"
 
 // Override base class with your custom functionality
 class LeadVisualizer : public olc::PixelGameEngine
@@ -51,7 +51,7 @@ public:
 	bool OnUserCreate() override
 	{
 
-		t = new Target();
+		t = new LinearTarget(ScreenWidth()/2, ScreenHeight()/2,140, 40);
 
 		
 		// Called once at the start, so create things here
@@ -61,7 +61,7 @@ public:
 	bool OnUserUpdate(float fElapsedTime) override
 	{
 		Clear(olc::Pixel(154, 203, 255));
-		drawFlightpathLine(t->flightpath(0, 1500, 0.5));
+		drawFlightpathLine(t->flightpath(0, 1500, 1));
 
 		t->update(fElapsedTime);
 		Vector2D pos = t->position();

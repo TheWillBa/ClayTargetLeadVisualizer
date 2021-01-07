@@ -146,6 +146,7 @@
     <ClCompile Include="Vector2D.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="LinearTarget.h" />
     <ClInclude Include="olcPixelGameEngine.h" />
     <ClInclude Include="Target.h" />
     <ClInclude Include="Vector2D.h" />
