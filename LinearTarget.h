@@ -10,22 +10,27 @@ from a starting position and angle offset
 class LinearTarget : public Target
 {
 private:
-	double angle;
-	double xVelocity;
-	double yVelocity;
+	double angleR;
+	double angleE;
+	Vector2D velocity;
+	double velocityMag;
 
 public:
-	LinearTarget(double x, double y, double velocity, double angle) : Target{ x,y }, angle(-angle * (3.141592) / 180){
-		xVelocity = velocity * cos(this->angle);
-		yVelocity = velocity * sin(this->angle);
-
+	LinearTarget(double x, double y, double velocity, double angle) : 
+		Target{ x,y }, angleR(-angle * (3.141592) / 180), angleE(angle){
+		this->velocity = Vector2D(velocity * cos(this->angleR), velocity * sin(this->angleR));
+		velocityMag = velocity;
 	};
 
-	Vector2D position(double time) override {
+	Vector2D position(double time) const override {
 		// make into a small demo game?
-		return Vector2D(xVelocity * time, yVelocity * time) + initialPos;
+		return Vector2D(velocity.X() * time, velocity.Y() * time) + initialPos;
 	};
-	
+
+
+	Vector2D getVelocity() { return velocity; };
+	double getVelocityMagitude() { return velocityMag; };
+	double angleRadians() { return angleR; };
 
 };
 

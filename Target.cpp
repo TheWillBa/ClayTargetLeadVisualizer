@@ -21,7 +21,7 @@ Target::Target(double xStart, double yStart) : totalTimeElapsed(0) {
 };
 
 
-Vector2D Target::position() {
+Vector2D Target::currentPosition() const {
 	return currentPos;
 }
 
@@ -32,7 +32,7 @@ void Target::update(double dtime) {
 }
 
 
-std::vector<Vector2D> Target::flightpath(double start, double end, double step) {
+std::vector<Vector2D> Target::flightpath(double start, double end, double step) const{
 	std::vector<Vector2D> path;
 	double time = start;
 	do {

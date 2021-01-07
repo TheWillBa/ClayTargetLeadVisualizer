@@ -29,7 +29,7 @@ Center the world at (0,0)?
 #define OLC_PGE_APPLICATION
 #include <iostream>
 #include "olcPixelGameEngine.h"
-#include "LinearTarget.h"
+#include "LinearTargetStation.h"
 
 // Override base class with your custom functionality
 class LeadVisualizer : public olc::PixelGameEngine
@@ -37,7 +37,7 @@ class LeadVisualizer : public olc::PixelGameEngine
 	// TODO: allows for the viewer to move the top down camera to move around the world
 
 private:
-	Target* t;
+	LinearTargetStation* station;
 
 
 public:
@@ -51,7 +51,10 @@ public:
 	bool OnUserCreate() override
 	{
 
-		t = new LinearTarget(ScreenWidth()/2, ScreenHeight()/2,140, 40);
+		LinearTarget t(0, 30, 70, 0);
+		Shooter s(ScreenWidth() / 2, ScreenHeight() / 2, 300);
+
+		station = new LinearTargetStation(t, s);
 
 		
 		// Called once at the start, so create things here
@@ -60,12 +63,22 @@ public:
 
 	bool OnUserUpdate(float fElapsedTime) override
 	{
+		LinearTarget t = station->getTarget();
 		Clear(olc::Pixel(154, 203, 255));
-		drawFlightpathLine(t->flightpath(0, 1500, 1));
+		drawFlightpathLine(t.flightpath(0, 1500, 1));
 
-		t->update(fElapsedTime);
-		Vector2D pos = t->position();
+		station->tick(fElapsedTime);
+
+		Vector2D pos = t.currentPosition();
+		Vector2D leadPos = station->currentLeadPosition();
+		Vector2D shooterPos = station->getShooter().getPosition();
+
+		DrawLine(shooterPos.X(), shooterPos.Y(), leadPos.X(), leadPos.Y(), olc::MAGENTA);
 		FillCircle(pos.X(), pos.Y(), 10, olc::Pixel(255,94,19));
+		FillCircle(leadPos.X(), leadPos.Y(), 10, olc::GREEN);
+		FillCircle(shooterPos.X(), shooterPos.Y(), 10, olc::DARK_GREY);
+
+
 
 		return true;		
 	}
@@ -73,7 +86,7 @@ public:
 	bool OnUserDestroy() override
 	{
 		// Called when window is closed
-		delete t;
+		delete station;
 		return true;
 	}
 

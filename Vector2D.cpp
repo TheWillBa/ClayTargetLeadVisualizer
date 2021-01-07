@@ -1,4 +1,5 @@
 #include "Vector2D.h"
+#include <math.h>
 Vector2D::Vector2D() : x(0), y(0) {};
 Vector2D::Vector2D(double x, double y) : x(x), y(y) {};
 
@@ -22,4 +23,24 @@ Vector2D Vector2D::operator* (double scalar) const {
 Vector2D Vector2D::operator* (int scalar) const {
 	Vector2D v(x * scalar, y * scalar);
 	return v;
+}
+
+double Vector2D::operator* (const Vector2D& other) const {
+	return x * other.x + y * other.y;
+}
+
+double Vector2D::distance(const Vector2D& other) const {
+	return sqrt((x - other.x) * (x - other.x) + (y - other.y) * (y - other.y));
+}
+
+double Vector2D::cosAngleBetween(const Vector2D& other) const {
+	return (*this * other) / (this->magnitude() * other.magnitude());
+}
+
+double Vector2D::magnitude() const{
+	return sqrt((x * x) + (y * y));
+}
+
+Vector2D Vector2D::operator- (const Vector2D& other) const {
+	return Vector2D(x - other.x, y - other.y);
 }

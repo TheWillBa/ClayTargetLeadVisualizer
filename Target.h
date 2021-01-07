@@ -15,11 +15,12 @@ public:
 	Target();
 	Target(double xStart, double yStart);
 
-	virtual Vector2D position(double time) = 0;
-	virtual Vector2D position();
+	virtual Vector2D position(double time) const = 0;
+	Vector2D currentPosition() const;
 	void update(double dtime);
+	double time() { return totalTimeElapsed; };
 
-	std::vector<Vector2D> flightpath(double start, double end, double step);
+	std::vector<Vector2D> flightpath(double start, double end, double step) const;
 };
 
 
