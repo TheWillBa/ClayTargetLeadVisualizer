@@ -156,6 +156,9 @@ private:
 	float rotation = 3.141592 / 2;
 	float rotationSpeed = 4.0f;
 
+	float targetHeight;
+	float targetDecsentSpeed = 12.0f;
+
 
 public:
 	FirstPersonTargetVisualizer()
@@ -167,16 +170,11 @@ public:
 public:
 	bool OnUserCreate() override
 	{
-
-		LinearTarget t(-20, 0, 10, 0);
-		Shooter s(0, -30, 300);
+		targetHeight = ScreenHeight() / 2;
+		LinearTarget t(-20, 0, 40, 0);
+		Shooter s(0, -30, 200);
 
 		station = new LinearTargetStation(t, s);
-
-		for (double i = 0; i < 6.28; i += 0.1) {
-			std::cout << "angle: " << i << std::endl;
-			std::cout << "atan eqy: " << Vector2D(cos(i), sin(i)).polarAngle() << std::endl;
-		}
 
 
 		// Called once at the start, so create things here
@@ -185,55 +183,78 @@ public:
 
 	bool OnUserUpdate(float fElapsedTime) override
 	{
+		// Be able to control time flow instead of using fElapsed time?
 
 		if (GetMouseWheel() > 0) rotation -= rotationSpeed * fElapsedTime;
 		if (GetMouseWheel() < 0) rotation += rotationSpeed * fElapsedTime;
 
+
+		Clear(olc::Pixel(154, 203, 255));
+
 		facing = Vector2D(cos(rotation), sin(rotation));
+		//targetHeight += fElapsedTime * targetDecsentSpeed;;
 
 		station->tick(fElapsedTime);
-		LinearTarget t = station->getTarget();
-		Shooter s = station->getShooter();
-		Clear(olc::Pixel(154 , 203, 255));
+		drawStation(station);
 
-		Vector2D shooterToTarget = t.currentPosition() - s.getPosition();
-
-		double angleOffFromCenter = acos(shooterToTarget.cosAngleBetween(facing));
-
-		// Currently can see in front and behind targets
-		if (angleOffFromCenter > fov/2) return true; // out of view
-
-		double distanceToTarget = shooterToTarget.magnitude();
-		double d = distanceToTarget * tan(angleOffFromCenter);
-
-		double perpDistance = shooterToTarget * facing;
-		double p = perpDistance * tan(fov/2);
-
-		double percentFromCenter = d / p;
+		float bottomScreenPercentMax = 0.25;
+		FillRect(0, (1 - bottomScreenPercentMax) * ScreenHeight(), ScreenWidth(), ScreenHeight() * bottomScreenPercentMax, olc::DARK_GREEN);
 
 		/*
-		Hard coded for facing up for simplicty, need to calculate side later
-		*/
-		int side;
-		if (shooterToTarget.polarAngle() > facing.polarAngle()) side = -1;
-		else side = 1;
-		double xPos = ScreenWidth() / 2 + side * (ScreenWidth() / 2) * percentFromCenter;
+		Draws gradient
+		float bottomScreenPercentMax = 0.25;
+		int steps = 10;
+		for(float i = bottomScreenPercentMax; i > 0; i -= bottomScreenPercentMax/steps )
+			FillRect(0, (1 - i) * ScreenHeight(), ScreenWidth(), ScreenHeight() * i, olc::Pixel(0, (1-i) * 255, 0));
+			*/
 
-		double distance = s.getPosition().distance(t.currentPosition());
-		double height = TARGET_MAX_HEIGHT * (1 / distance);
-		double width = TARGET_MAX_WIDTH * (1 / distance);
 
-		double alpha = 10 / (distance);
-
-		FillRect(xPos - width/2, ScreenHeight()/2 - height / 2, width, height, olc::Pixel(255, 94, 19));
-
+		
 		return true;
 	}
 
 	bool OnUserDestroy() override
 	{
-
+		delete station;
 		return true;
+	}
+
+	void drawStation(LinearTargetStation * station) {
+		LinearTarget t = station->getTarget();
+		Shooter s = station->getShooter();
+
+		DrawTargetWithPerspective(t.currentPosition(), s.getPosition(), olc::Pixel(255, 94, 19));
+		DrawTargetWithPerspective(station->currentLeadPosition(), s.getPosition(), olc::GREEN);
+	}
+
+	void DrawTargetWithPerspective(const Vector2D& tPosition, const Vector2D& cameraPosition, const olc::Pixel& color) {
+		Vector2D shooterToTarget = tPosition - cameraPosition;
+
+
+		double angleOffFromCenter = acos(shooterToTarget.cosAngleBetween(facing));
+
+		// Currently can see in front and behind targets
+		if (angleOffFromCenter > fov / 2) return; // out of view
+
+		double distanceToTarget = shooterToTarget.magnitude();
+		double d = distanceToTarget * tan(angleOffFromCenter);
+
+		double perpDistance = shooterToTarget * facing;
+		double p = perpDistance * tan(fov / 2);
+
+		double percentFromCenter = d / p;
+
+		int side;
+		if (shooterToTarget.polarAngle() > facing.polarAngle()) side = -1;
+		else side = 1;
+
+		double xPos = ScreenWidth() / 2 + side * (ScreenWidth() / 2) * percentFromCenter;
+
+		double distance = cameraPosition.distance(tPosition);
+		double height = TARGET_MAX_HEIGHT * (1 / distance);
+		double width = TARGET_MAX_WIDTH * (1 / distance);
+
+		FillRect(xPos - width / 2, targetHeight - height / 2, width, height, color);
 	}
 
 
