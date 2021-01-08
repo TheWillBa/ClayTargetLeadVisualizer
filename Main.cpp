@@ -23,6 +23,13 @@ T = the current location of the target
 
 Center the world at (0,0)?
 
+
+
+
+Next Steps:
+  -> Approximation methods for lead of any type
+  -> Expanding to 3D linear and arbitrary targets
+
 */
 
 
@@ -132,9 +139,110 @@ public:
 
 };
 
+// Override base class with your custom functionality
+class FirstPersonTargetVisualizer : public olc::PixelGameEngine
+{
+	// TODO: allows for the viewer to move the top down camera to move around the world
+
+private:
+	LinearTargetStation* station;
+	const double TARGET_MAX_HEIGHT = 600;
+	const double TARGET_MAX_WIDTH = 1000;
+
+
+	Vector2D facing;
+
+	float fov = 120;
+	float rotation = 3.141592 / 2;
+	float rotationSpeed = 4.0f;
+
+
+public:
+	FirstPersonTargetVisualizer()
+	{
+		// Name you application
+		sAppName = "First Person Target Visualization";
+	}
+
+public:
+	bool OnUserCreate() override
+	{
+
+		LinearTarget t(-20, 0, 10, 0);
+		Shooter s(0, -30, 300);
+
+		station = new LinearTargetStation(t, s);
+
+		for (double i = 0; i < 6.28; i += 0.1) {
+			std::cout << "angle: " << i << std::endl;
+			std::cout << "atan eqy: " << Vector2D(cos(i), sin(i)).polarAngle() << std::endl;
+		}
+
+
+		// Called once at the start, so create things here
+		return true;
+	}
+
+	bool OnUserUpdate(float fElapsedTime) override
+	{
+
+		if (GetMouseWheel() > 0) rotation -= rotationSpeed * fElapsedTime;
+		if (GetMouseWheel() < 0) rotation += rotationSpeed * fElapsedTime;
+
+		facing = Vector2D(cos(rotation), sin(rotation));
+
+		station->tick(fElapsedTime);
+		LinearTarget t = station->getTarget();
+		Shooter s = station->getShooter();
+		Clear(olc::Pixel(154 , 203, 255));
+
+		Vector2D shooterToTarget = t.currentPosition() - s.getPosition();
+
+		double angleOffFromCenter = acos(shooterToTarget.cosAngleBetween(facing));
+
+		// Currently can see in front and behind targets
+		if (angleOffFromCenter > fov/2) return true; // out of view
+
+		double distanceToTarget = shooterToTarget.magnitude();
+		double d = distanceToTarget * tan(angleOffFromCenter);
+
+		double perpDistance = shooterToTarget * facing;
+		double p = perpDistance * tan(fov/2);
+
+		double percentFromCenter = d / p;
+
+		/*
+		Hard coded for facing up for simplicty, need to calculate side later
+		*/
+		int side;
+		if (shooterToTarget.polarAngle() > facing.polarAngle()) side = -1;
+		else side = 1;
+		double xPos = ScreenWidth() / 2 + side * (ScreenWidth() / 2) * percentFromCenter;
+
+		double distance = s.getPosition().distance(t.currentPosition());
+		double height = TARGET_MAX_HEIGHT * (1 / distance);
+		double width = TARGET_MAX_WIDTH * (1 / distance);
+
+		double alpha = 10 / (distance);
+
+		FillRect(xPos - width/2, ScreenHeight()/2 - height / 2, width, height, olc::Pixel(255, 94, 19));
+
+		return true;
+	}
+
+	bool OnUserDestroy() override
+	{
+
+		return true;
+	}
+
+
+
+};
+
 int main()
 {
-	LeadVisualizer demo;
+	FirstPersonTargetVisualizer demo;
 	if (demo.Construct(600, 600, 1, 1))
 		demo.Start();
 	return 0;

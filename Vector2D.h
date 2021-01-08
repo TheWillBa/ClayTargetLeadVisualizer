@@ -21,6 +21,7 @@ public:
 	double distance(const Vector2D& other) const;
 	double cosAngleBetween(const Vector2D& other) const;
 	double magnitude() const;
+	double polarAngle() const;
 	
 };
 

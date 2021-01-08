@@ -44,3 +44,9 @@ double Vector2D::magnitude() const{
 Vector2D Vector2D::operator- (const Vector2D& other) const {
 	return Vector2D(x - other.x, y - other.y);
 }
+
+double Vector2D::polarAngle() const {
+	double a = fmod(atan2(y, x) , (2 * 3.141592));
+	if (a >= 0) return a;
+	return 2 * 3.141592 + a;
+}
