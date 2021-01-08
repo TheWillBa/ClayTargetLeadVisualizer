@@ -50,3 +50,16 @@ double Vector2D::polarAngle() const {
 	if (a >= 0) return a;
 	return 2 * 3.141592 + a;
 }
+
+
+Vector2D Vector2D::rotated90CCW() const {
+	return Vector2D(-y, x);
+}
+int Vector2D::onSide(const Vector2D& other) const {
+	double dot = *this * other.rotated90CCW();
+	return (dot > 0) - (dot < 0);
+}
+
+Vector2D Vector2D::perp() const {
+	return Vector2D(y, -x);
+}

@@ -7,13 +7,13 @@ class LinearTargetStation
 {
 private:
 	LinearTarget target;
-	const Shooter shooter;
+	Shooter shooter;
 
 public:
 	LinearTargetStation(LinearTarget target, const Shooter shooter) : target(target), shooter(shooter) {};
 
 	const LinearTarget& getTarget() { return target; };
-	const Shooter& getShooter() { return shooter; };
+	Shooter& getShooter() { return shooter; };
 
 	void tick(double dtime) {
 		target.update(dtime);

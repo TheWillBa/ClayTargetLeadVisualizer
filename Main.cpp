@@ -28,13 +28,14 @@ Center the world at (0,0)?
 
 Next Steps:
   -> Approximation methods for lead of any type
-  -> Expanding to 3D linear and arbitrary targets
+  -> Expanding lead calculation to 3D linear and arbitrary targets
 
 */
 
 
 #define OLC_PGE_APPLICATION
 #include <iostream>
+#include <string>
 #include "olcPixelGameEngine.h"
 #include "LinearTargetStation.h"
 
@@ -146,16 +147,13 @@ class FirstPersonTargetVisualizer : public olc::PixelGameEngine
 
 private:
 	LinearTargetStation* station;
+
 	const double TARGET_MAX_HEIGHT = 600;
 	const double TARGET_MAX_WIDTH = 1000;
 
+	float fov = (3.141592) / 180 * 120;
 
 	Vector2D facing;
-
-	float fov = 120;
-	float rotation = 3.141592 / 2;
-	float rotationSpeed = 4.0f;
-
 	float targetHeight;
 	float targetDecsentSpeed = 12.0f;
 
@@ -171,8 +169,8 @@ public:
 	bool OnUserCreate() override
 	{
 		targetHeight = ScreenHeight() / 2;
-		LinearTarget t(-20, 0, 40, 0);
-		Shooter s(0, -30, 200);
+		LinearTarget t(-60, 0, 20, 0);
+		Shooter s(0, -63, 100);
 
 		station = new LinearTargetStation(t, s);
 
@@ -183,15 +181,27 @@ public:
 
 	bool OnUserUpdate(float fElapsedTime) override
 	{
+
+		Shooter& s = station->getShooter();
+		LinearTarget t = station->getTarget();
 		// Be able to control time flow instead of using fElapsed time?
 
-		if (GetMouseWheel() > 0) rotation -= rotationSpeed * fElapsedTime;
-		if (GetMouseWheel() < 0) rotation += rotationSpeed * fElapsedTime;
+		if (GetMouseWheel() > 0) s.rotateCounterClockwise(fElapsedTime);
+		if (GetMouseWheel() < 0) s.rotateClockwise(fElapsedTime);
+
+		if (GetKey(olc::Key::LEFT).bHeld || GetKey(olc::Key::A).bHeld) s.strafeLeft(fElapsedTime);
+		if (GetKey(olc::Key::RIGHT).bHeld || GetKey(olc::Key::D).bHeld) s.strafeRight(fElapsedTime);
+		if (GetKey(olc::Key::UP).bHeld || GetKey(olc::Key::W).bHeld) s.moveForwards(fElapsedTime);
+		if (GetKey(olc::Key::DOWN).bHeld || GetKey(olc::Key::S).bHeld)s.moveBackwards(fElapsedTime);
+
+		
+
+		
 
 
 		Clear(olc::Pixel(154, 203, 255));
 
-		facing = Vector2D(cos(rotation), sin(rotation));
+		facing = s.currentlyFacing();
 		//targetHeight += fElapsedTime * targetDecsentSpeed;;
 
 		station->tick(fElapsedTime);
@@ -219,42 +229,47 @@ public:
 		return true;
 	}
 
-	void drawStation(LinearTargetStation * station) {
+	void drawStation(LinearTargetStation* station) {
 		LinearTarget t = station->getTarget();
-		Shooter s = station->getShooter();
+		Shooter& s = station->getShooter();
 
 		DrawTargetWithPerspective(t.currentPosition(), s.getPosition(), olc::Pixel(255, 94, 19));
+		Vector2D shooterToTarget = t.currentPosition() - s.getPosition();
+
+		double angleOffFromCenter = acos(shooterToTarget.cosAngleBetween(s.currentlyFacing()));
+		DrawString(0, 0, std::to_string(angleOffFromCenter * 180 / 3.141592), olc::BLACK, 2.5);
+		DrawString(0, 50, s.getPosition().toString(), olc::BLACK, 2.5);
 		DrawTargetWithPerspective(station->currentLeadPosition(), s.getPosition(), olc::GREEN);
 	}
 
 	void DrawTargetWithPerspective(const Vector2D& tPosition, const Vector2D& cameraPosition, const olc::Pixel& color) {
 		Vector2D shooterToTarget = tPosition - cameraPosition;
 
-
 		double angleOffFromCenter = acos(shooterToTarget.cosAngleBetween(facing));
 
 		// Currently can see in front and behind targets
 		if (angleOffFromCenter > fov / 2) return; // out of view
+		if (shooterToTarget * facing < 0) return; // behind
 
 		double distanceToTarget = shooterToTarget.magnitude();
-		double d = distanceToTarget * tan(angleOffFromCenter);
+		//double d = distanceToTarget * tan(angleOffFromCenter);
 
-		double perpDistance = shooterToTarget * facing;
-		double p = perpDistance * tan(fov / 2);
+		//double perpDistance = shooterToTarget * facing;
+		//double p = perpDistance * tan(fov / 2 + 0.0001);
 
-		double percentFromCenter = d / p;
+		//double percentFromCenter = d / p;
+		double percentFromCenter = angleOffFromCenter / (fov / 2);
 
-		int side;
-		if (shooterToTarget.polarAngle() > facing.polarAngle()) side = -1;
-		else side = 1;
+		int side = facing.onSide(shooterToTarget);
 
-		double xPos = ScreenWidth() / 2 + side * (ScreenWidth() / 2) * percentFromCenter;
+		double xPos = ScreenWidth() / 2 + (double) side * (ScreenWidth() / 2) * percentFromCenter;
 
 		double distance = cameraPosition.distance(tPosition);
-		double height = TARGET_MAX_HEIGHT * (1 / distance);
-		double width = TARGET_MAX_WIDTH * (1 / distance);
+		double height = TARGET_MAX_HEIGHT * (1 / (distance));
+		double width = TARGET_MAX_WIDTH * (1 / (distance));
 
 		FillRect(xPos - width / 2, targetHeight - height / 2, width, height, color);
+
 	}
 
 

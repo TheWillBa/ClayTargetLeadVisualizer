@@ -1,4 +1,6 @@
 #pragma once
+#include <string>
+
 class Vector2D
 {
 private:
@@ -22,6 +24,16 @@ public:
 	double cosAngleBetween(const Vector2D& other) const;
 	double magnitude() const;
 	double polarAngle() const;
+	Vector2D rotated90CCW() const;
+
+	/*
+	Returns -1 if this vector is to the left of other, 1 if to the right
+	*/
+	int onSide(const Vector2D& other) const;
+	Vector2D perp() const;
+	std::string toString() {
+		return "X: " + std::to_string(x) + ", Y: " + std::to_string(y);
+	}
 	
 };
 
