@@ -36,6 +36,7 @@ Next Steps:
 #define OLC_PGE_APPLICATION
 #include <iostream>
 #include <string>
+#include <vector>
 #include "olcPixelGameEngine.h"
 #include "LinearTargetStation.h"
 
@@ -157,6 +158,10 @@ private:
 	float targetHeight;
 	float targetDecsentSpeed = 12.0f;
 
+	// A list of vectors of locations of objects to draw on the world
+	std::vector<Vector2D> objects;
+	float bottomScreenPercentMax = 0.25;
+
 
 public:
 	FirstPersonTargetVisualizer()
@@ -173,6 +178,12 @@ public:
 		Shooter s(0, -63, 100);
 
 		station = new LinearTargetStation(t, s);
+
+		objects.push_back(Vector2D(0, 0));
+		objects.push_back(Vector2D(30, 0));
+		objects.push_back(Vector2D(0, 30));
+		objects.push_back(Vector2D(-30, 0));
+		objects.push_back(Vector2D(0, -30));
 
 
 		// Called once at the start, so create things here
@@ -207,7 +218,7 @@ public:
 		station->tick(fElapsedTime);
 		drawStation(station);
 
-		float bottomScreenPercentMax = 0.25;
+		
 		FillRect(0, (1 - bottomScreenPercentMax) * ScreenHeight(), ScreenWidth(), ScreenHeight() * bottomScreenPercentMax, olc::DARK_GREEN);
 
 		/*
@@ -217,6 +228,13 @@ public:
 		for(float i = bottomScreenPercentMax; i > 0; i -= bottomScreenPercentMax/steps )
 			FillRect(0, (1 - i) * ScreenHeight(), ScreenWidth(), ScreenHeight() * i, olc::Pixel(0, (1-i) * 255, 0));
 			*/
+
+		/*
+		Draw items on the ground
+		*/
+		for (int i = 0; i < objects.size(); ++i) {
+			DrawObjectOnGround(objects[i], s.getPosition(), olc::VERY_DARK_GREEN);
+		}
 
 
 		
@@ -270,6 +288,35 @@ public:
 
 		FillRect(xPos - width / 2, targetHeight - height / 2, width, height, color);
 
+	}
+
+	void DrawObjectOnGround(const Vector2D& tPosition, const Vector2D& cameraPosition, const olc::Pixel& color) {
+		Vector2D shooterToObject = tPosition - cameraPosition;
+
+		double angleOffFromCenter = acos(shooterToObject.cosAngleBetween(facing));
+
+		// Currently can see in front and behind targets
+		if (angleOffFromCenter > fov / 2) return; // out of view
+		if (shooterToObject * facing < 0) return; // behind
+
+		double distanceToTarget = shooterToObject.magnitude();
+		//double d = distanceToTarget * tan(angleOffFromCenter);
+
+		//double perpDistance = shooterToTarget * facing;
+		//double p = perpDistance * tan(fov / 2 + 0.0001);
+
+		//double percentFromCenter = d / p;
+		double percentFromCenter = angleOffFromCenter / (fov / 2);
+
+		int side = facing.onSide(shooterToObject);
+
+		double xPos = ScreenWidth() / 2 + (double)side * (ScreenWidth() / 2) * percentFromCenter;
+
+		double distance = cameraPosition.distance(tPosition);
+		double height = TARGET_MAX_HEIGHT * (1 / (distance));
+		double width = TARGET_MAX_WIDTH * (1 / (distance));
+
+		FillRect(xPos - width / 2, ScreenHeight() - (bottomScreenPercentMax * ScreenHeight()/2 * (distance / distance + 1) - height / 2), width, height, color);
 	}
 
 
