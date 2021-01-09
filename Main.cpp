@@ -39,6 +39,7 @@ Next Steps:
 #include <vector>
 #include "olcPixelGameEngine.h"
 #include "LinearTargetStation.h"
+#include "Objects.h"
 
 // Override base class with your custom functionality
 class LeadVisualizer : public olc::PixelGameEngine
@@ -159,7 +160,7 @@ private:
 	float targetDecsentSpeed = 12.0f;
 
 	// A list of vectors of locations of objects to draw on the world
-	std::vector<Vector2D> objects;
+	std::vector<RectGroundObject> objects;
 	float bottomScreenPercentMax = 0.25;
 
 
@@ -179,11 +180,15 @@ public:
 
 		station = new LinearTargetStation(t, s);
 
-		objects.push_back(Vector2D(0, 0));
-		objects.push_back(Vector2D(30, 0));
-		objects.push_back(Vector2D(0, 30));
-		objects.push_back(Vector2D(-30, 0));
-		objects.push_back(Vector2D(0, -30));
+		objects.push_back(RectGroundObject(TARGET_MAX_WIDTH, TARGET_MAX_HEIGHT, Vector2D(0, 0), olc::VERY_DARK_GREEN));
+		objects.push_back(RectGroundObject(TARGET_MAX_WIDTH, TARGET_MAX_HEIGHT * 10, Vector2D(30, 0), olc::VERY_DARK_GREEN));
+		objects.push_back(RectGroundObject(TARGET_MAX_WIDTH, TARGET_MAX_HEIGHT * 10, Vector2D(0, 30), olc::VERY_DARK_GREEN));
+		objects.push_back(RectGroundObject(TARGET_MAX_WIDTH, TARGET_MAX_HEIGHT * 10, Vector2D(-30, 0), olc::VERY_DARK_GREEN));
+		objects.push_back(RectGroundObject(TARGET_MAX_WIDTH, TARGET_MAX_HEIGHT * 10, Vector2D(0, -30), olc::VERY_DARK_GREEN));
+		//objects.push_back(Vector2D(30, 0));
+		//objects.push_back(Vector2D(0, 30));
+		//objects.push_back(Vector2D(-30, 0));
+		//objects.push_back(Vector2D(0, -30));
 
 
 		// Called once at the start, so create things here
@@ -224,16 +229,17 @@ public:
 		/*
 		Draws gradient
 		float bottomScreenPercentMax = 0.25;
+		*/
 		int steps = 10;
 		for(float i = bottomScreenPercentMax; i > 0; i -= bottomScreenPercentMax/steps )
-			FillRect(0, (1 - i) * ScreenHeight(), ScreenWidth(), ScreenHeight() * i, olc::Pixel(0, (1-i) * 255, 0));
-			*/
+			FillRect(0, (1 - i) * ScreenHeight(), ScreenWidth(), ScreenHeight() * bottomScreenPercentMax / steps, olc::Pixel(0, (1-i) * (1-i) * 255, 0));
+			
 
 		/*
 		Draw items on the ground
 		*/
 		for (int i = 0; i < objects.size(); ++i) {
-			DrawObjectOnGround(objects[i], s.getPosition(), olc::VERY_DARK_GREEN);
+			DrawObjectOnGround(objects[i], s.getPosition());
 		}
 
 
@@ -261,45 +267,39 @@ public:
 	}
 
 	void DrawTargetWithPerspective(const Vector2D& tPosition, const Vector2D& cameraPosition, const olc::Pixel& color) {
-		Vector2D shooterToTarget = tPosition - cameraPosition;
+		drawRectWithPerspectiveWithY(cameraPosition, tPosition, TARGET_MAX_WIDTH, TARGET_MAX_HEIGHT, targetHeight, color);
+	}
 
-		double angleOffFromCenter = acos(shooterToTarget.cosAngleBetween(facing));
+	void DrawObjectOnGround(const RectGroundObject& object, const Vector2D& cameraPosition) {
 
-		// Currently can see in front and behind targets
-		if (angleOffFromCenter > fov / 2) return; // out of view
-		if (shooterToTarget * facing < 0) return; // behind
 
-		double distanceToTarget = shooterToTarget.magnitude();
-		//double d = distanceToTarget * tan(angleOffFromCenter);
+		double distance = cameraPosition.distance(object.position);
+		float percent = pow((distance / (distance + 1)), 7); /* must grow with distance */
+		int horizon = ScreenHeight() * (1 - bottomScreenPercentMax);
+		float bY = ScreenHeight() - ((ScreenHeight() - horizon) * percent);
 
-		//double perpDistance = shooterToTarget * facing;
-		//double p = perpDistance * tan(fov / 2 + 0.0001);
 
-		//double percentFromCenter = d / p;
-		double percentFromCenter = angleOffFromCenter / (fov / 2);
+		double height = object.height * (1 / (distance));
+		float y = bY - height/2;
 
-		int side = facing.onSide(shooterToTarget);
 
-		double xPos = ScreenWidth() / 2 + (double) side * (ScreenWidth() / 2) * percentFromCenter;
+		drawRectWithPerspectiveWithY(cameraPosition, object.position, object.wigth, object.height,
+			y, object.color);
 
-		double distance = cameraPosition.distance(tPosition);
-		double height = TARGET_MAX_HEIGHT * (1 / (distance));
-		double width = TARGET_MAX_WIDTH * (1 / (distance));
-
-		FillRect(xPos - width / 2, targetHeight - height / 2, width, height, color);
+		//  
 
 	}
 
-	void DrawObjectOnGround(const Vector2D& tPosition, const Vector2D& cameraPosition, const olc::Pixel& color) {
-		Vector2D shooterToObject = tPosition - cameraPosition;
+	void drawRectWithPerspectiveWithY(Vector2D cameraWorldPos, Vector2D rectWorldPos, int width, int height, float yPos, olc::Pixel color) {
+		Vector2D cameraToRect = rectWorldPos - cameraWorldPos;
 
-		double angleOffFromCenter = acos(shooterToObject.cosAngleBetween(facing));
+		double angleOffFromCenter = acos(cameraToRect.cosAngleBetween(facing));
 
 		// Currently can see in front and behind targets
 		if (angleOffFromCenter > fov / 2) return; // out of view
-		if (shooterToObject * facing < 0) return; // behind
+		if (cameraToRect * facing < 0) return; // behind
 
-		double distanceToTarget = shooterToObject.magnitude();
+		double distanceToTarget = cameraToRect.magnitude();
 		//double d = distanceToTarget * tan(angleOffFromCenter);
 
 		//double perpDistance = shooterToTarget * facing;
@@ -308,15 +308,15 @@ public:
 		//double percentFromCenter = d / p;
 		double percentFromCenter = angleOffFromCenter / (fov / 2);
 
-		int side = facing.onSide(shooterToObject);
+		int side = facing.onSide(cameraToRect);
 
 		double xPos = ScreenWidth() / 2 + (double)side * (ScreenWidth() / 2) * percentFromCenter;
 
-		double distance = cameraPosition.distance(tPosition);
-		double height = TARGET_MAX_HEIGHT * (1 / (distance));
-		double width = TARGET_MAX_WIDTH * (1 / (distance));
+		double distance = cameraWorldPos.distance(rectWorldPos);
+		double nheight = height * (1 / (distance));
+		double nwidth = width * (1 / (distance));
 
-		FillRect(xPos - width / 2, ScreenHeight() - (bottomScreenPercentMax * ScreenHeight()/2 * (distance / distance + 1) - height / 2), width, height, color);
+		FillRect(xPos - nwidth / 2, yPos - nheight/2, nwidth, nheight, color);
 	}
 
 
