@@ -34,12 +34,15 @@ Next Steps:
 
 
 #define OLC_PGE_APPLICATION
+#define OLC_PGEX_SOUND
 #include <iostream>
 #include <string>
 #include <vector>
+#include <math.h>
 #include "olcPixelGameEngine.h"
 #include "LinearTargetStation.h"
 #include "Objects.h"
+#include "olcPGEX_Sound.h"
 
 // Override base class with your custom functionality
 class LeadVisualizer : public olc::PixelGameEngine
@@ -163,6 +166,16 @@ private:
 	std::vector<RectGroundObject> objects;
 	float bottomScreenPercentMax = 0.25;
 
+	float screenXWalkingOffset = 0;
+	float screenYWalkingOffset = 0;
+
+	float screenWalkCycle = 0;
+	int MAX_BOB = ScreenHeight() / 23;
+
+	float walkCycleSpeed = 10.0f;
+
+	int stepSound;
+
 
 public:
 	FirstPersonTargetVisualizer()
@@ -174,6 +187,10 @@ public:
 public:
 	bool OnUserCreate() override
 	{
+
+		olc::SOUND::InitialiseAudio(44100, 1, 8, 512);
+		stepSound = olc::SOUND::LoadAudioSample("C:\\Users\\wbabi\\source\\repos\\ClayTargetLeadVisualizer\\tone.wav");
+
 		targetHeight = ScreenHeight() / 2;
 		LinearTarget t(-60, 0, 20, 0);
 		Shooter s(0, -63, 100);
@@ -191,12 +208,16 @@ public:
 		//objects.push_back(Vector2D(0, -30));
 
 
+
+
 		// Called once at the start, so create things here
 		return true;
 	}
 
 	bool OnUserUpdate(float fElapsedTime) override
 	{
+
+		
 
 		Shooter& s = station->getShooter();
 		LinearTarget t = station->getTarget();
@@ -205,26 +226,38 @@ public:
 		if (GetMouseWheel() > 0) s.rotateCounterClockwise(fElapsedTime);
 		if (GetMouseWheel() < 0) s.rotateClockwise(fElapsedTime);
 
+
 		if (GetKey(olc::Key::LEFT).bHeld || GetKey(olc::Key::A).bHeld) s.strafeLeft(fElapsedTime);
 		if (GetKey(olc::Key::RIGHT).bHeld || GetKey(olc::Key::D).bHeld) s.strafeRight(fElapsedTime);
-		if (GetKey(olc::Key::UP).bHeld || GetKey(olc::Key::W).bHeld) s.moveForwards(fElapsedTime);
-		if (GetKey(olc::Key::DOWN).bHeld || GetKey(olc::Key::S).bHeld)s.moveBackwards(fElapsedTime);
+		if (GetKey(olc::Key::UP).bHeld || GetKey(olc::Key::W).bHeld) {
+			s.moveForwards(fElapsedTime);
+			screenWalkCycle += fElapsedTime * walkCycleSpeed;
+			
+			//int playSoundVal = fmod(screenWalkCycle, (3.141592));
+			//float range = 0.05;
+			//if (playSoundVal == 0) {// < range || playSoundVal > -range) {
+			//	olc::SOUND::PlaySample(stepSound);
+			//}
+		}
+		else {
+			screenWalkCycle = 0;
+		}
 
+		if (GetKey(olc::Key::DOWN).bHeld || GetKey(olc::Key::S).bHeld) s.moveBackwards(fElapsedTime);
 		
-
+		screenYWalkingOffset = abs(sin(screenWalkCycle)) * MAX_BOB;
 		
-
 
 		Clear(olc::Pixel(154, 203, 255));
 
 		facing = s.currentlyFacing();
-		//targetHeight += fElapsedTime * targetDecsentSpeed;;
+		targetHeight += fElapsedTime * targetDecsentSpeed;;
 
 		station->tick(fElapsedTime);
 		drawStation(station);
 
 		
-		FillRect(0, (1 - bottomScreenPercentMax) * ScreenHeight(), ScreenWidth(), ScreenHeight() * bottomScreenPercentMax, olc::DARK_GREEN);
+		//FillRect(0, (1 - bottomScreenPercentMax) * ScreenHeight(), ScreenWidth(), ScreenHeight() * bottomScreenPercentMax, olc::DARK_GREEN);
 
 		/*
 		Draws gradient
@@ -232,9 +265,10 @@ public:
 		*/
 		int steps = 10;
 		for(float i = bottomScreenPercentMax; i > 0; i -= bottomScreenPercentMax/steps )
-			FillRect(0, (1 - i) * ScreenHeight(), ScreenWidth(), ScreenHeight() * bottomScreenPercentMax / steps, olc::Pixel(0, (1-i) * (1-i) * 255, 0));
+			FillRect(0, (1 - i) * ScreenHeight() + screenYWalkingOffset, ScreenWidth(), ScreenHeight() * bottomScreenPercentMax / steps, 
+				olc::Pixel(0, (1-i) * (1-i) * 255, 0));
 			
-
+		FillRect(0, ScreenHeight() + screenYWalkingOffset, ScreenWidth(), ScreenHeight()/4, olc::GREEN);
 		/*
 		Draw items on the ground
 		*/
@@ -316,7 +350,7 @@ public:
 		double nheight = height * (1 / (distance));
 		double nwidth = width * (1 / (distance));
 
-		FillRect(xPos - nwidth / 2, yPos - nheight/2, nwidth, nheight, color);
+		FillRect(xPos - nwidth / 2, yPos - nheight/2 + screenYWalkingOffset, nwidth, nheight, color);
 	}
 
 

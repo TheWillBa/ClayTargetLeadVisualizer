@@ -150,6 +150,7 @@
     <ClInclude Include="Objects.h" />
     <ClInclude Include="LinearTarget.h" />
     <ClInclude Include="LinearTargetStation.h" />
+    <ClInclude Include="olcPGEX_Sound.h" />
     <ClInclude Include="olcPixelGameEngine.h" />
     <ClInclude Include="Shooter.h" />
     <ClInclude Include="Target.h" />
