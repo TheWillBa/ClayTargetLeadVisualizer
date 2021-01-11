@@ -265,7 +265,10 @@ public:
 
 		Clear(olc::Pixel(154, 203, 255));
 
-		if (GetMouse(0).bHeld) DrawLine(ScreenWidth() / 2, ScreenHeight() - gunHeight, ScreenWidth() / 2, ScreenHeight() / 2, olc::RED);
+		if (GetMouse(0).bHeld) {
+			DrawLine(ScreenWidth() / 2, ScreenHeight() - gunHeight, ScreenWidth() / 2, ScreenHeight() / 2, olc::RED);
+			station->makeShot();
+		}
 
 		facing = s.currentlyFacing();
 		//targetHeight += fElapsedTime * targetDecsentSpeed;;
@@ -308,14 +311,20 @@ public:
 	void drawStation(LinearTargetStation * station) {
 		LinearTarget t = station->getTarget();
 		Shooter& s = station->getShooter();
-
-		DrawTargetWithPerspective(t.currentPosition(), s.getPosition(), olc::Pixel(255, 94, 19));
-		Vector2D shooterToTarget = t.currentPosition() - s.getPosition();
-
-		double angleOffFromCenter = acos(shooterToTarget.cosAngleBetween(s.currentlyFacing()));
-		DrawString(0, 0, std::to_string(angleOffFromCenter * 180 / 3.141592), olc::BLACK, 2.5);
+		DrawString(0, 25, t.isBroken() ? "broken" : "not broken" , olc::BLACK, 2.5);
 		DrawString(0, 50, s.getPosition().toString(), olc::BLACK, 2.5);
-		DrawTargetWithPerspective(station->currentLeadPosition(), s.getPosition(), olc::GREEN);
+
+		if (!t.isBroken()) {
+
+			DrawTargetWithPerspective(t.currentPosition(), s.getPosition(), olc::Pixel(255, 94, 19));
+			Vector2D shooterToTarget = t.currentPosition() - s.getPosition();
+
+			double angleOffFromCenter = acos(shooterToTarget.cosAngleBetween(s.currentlyFacing()));
+			DrawString(0, 0, std::to_string(angleOffFromCenter * 180 / 3.141592), olc::BLACK, 2.5);
+
+			DrawTargetWithPerspective(station->currentLeadPosition(), s.getPosition(), olc::GREEN);
+		}
+
 	}
 
 	void DrawTargetWithPerspective(const Vector2D& tPosition, const Vector2D& cameraPosition, const olc::Pixel& color) {

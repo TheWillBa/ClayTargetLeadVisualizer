@@ -13,11 +13,13 @@ the world will be centered around the point (0,0)
 Target::Target() : totalTimeElapsed(0) {
 	currentPos = Vector2D(0, 0);
 	initialPos = Vector2D(0, 0);
+
 };
 
 Target::Target(double xStart, double yStart) : totalTimeElapsed(0) {
 	initialPos = Vector2D(xStart, yStart);
 	currentPos = initialPos;
+	m_isBroken = false;
 };
 
 
@@ -29,6 +31,14 @@ Vector2D Target::currentPosition() const {
 void Target::update(double dtime) {
 	currentPos = position(totalTimeElapsed);
 	totalTimeElapsed += dtime;
+}
+
+bool Target::isBroken() {
+	return m_isBroken;
+}
+
+void Target::breakTarget() {
+	m_isBroken = true;
 }
 
 

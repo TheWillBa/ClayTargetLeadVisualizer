@@ -2,6 +2,7 @@
 
 #include "LinearTarget.h";
 #include "Shooter.h"
+#include <iostream>
 
 class LinearTargetStation
 {
@@ -39,6 +40,35 @@ public:
 		double timePassed = (-b + sqrt(b * b - 4 * a * c)) / (2 * a);
 
 		return target.position(target.time() + timePassed);
+	}
+
+	bool makeShot() {
+		Vector2D shooterToLead = shooter.getPosition() - currentLeadPosition();
+
+
+		double distance = shooterToLead.magnitude();
+		double angleRange = atan((shooter.getShotPatternSize() / 2.0) / distance);
+		double shotAngle = 3.141592 - acos(shooter.currentlyFacing().cosAngleBetween(shooterToLead));
+
+
+		std::cout << "Req. angle: " << angleRange << std::endl;
+		std::cout << "Shot angle: " << shotAngle << std::endl;
+
+		// facing away from the target
+		if (shooterToLead * shooter.currentlyFacing() > 0) {
+			std::cout << "wrong dir " << std::endl;
+			return false;
+		}
+
+		if (shotAngle <= angleRange) // if hit
+		{
+			target.breakTarget();
+			return true;
+		}
+
+
+		return false;
+
 	}
 
 
