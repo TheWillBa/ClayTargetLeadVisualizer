@@ -30,6 +30,10 @@ Next Steps:
   -> Approximation methods for lead of any type
   -> Expanding lead calculation to 3D linear and arbitrary targets
 
+
+  -> Implement the shooting component
+  -> Then move the project into Unity/Unreal? (can use physics engines?)
+
 */
 
 
@@ -188,8 +192,8 @@ public:
 	bool OnUserCreate() override
 	{
 
-		olc::SOUND::InitialiseAudio(44100, 1, 8, 512);
-		stepSound = olc::SOUND::LoadAudioSample("C:\\Users\\wbabi\\source\\repos\\ClayTargetLeadVisualizer\\tone.wav");
+		//olc::SOUND::InitialiseAudio(44100, 1, 8, 512);
+		//stepSound = olc::SOUND::LoadAudioSample("C:\\Users\\wbabi\\source\\repos\\ClayTargetLeadVisualizer\\tone.wav");
 
 		targetHeight = ScreenHeight() / 2;
 		LinearTarget t(-60, 0, 20, 0);
@@ -250,8 +254,10 @@ public:
 
 		Clear(olc::Pixel(154, 203, 255));
 
+
+
 		facing = s.currentlyFacing();
-		targetHeight += fElapsedTime * targetDecsentSpeed;;
+		//targetHeight += fElapsedTime * targetDecsentSpeed;;
 
 		station->tick(fElapsedTime);
 		drawStation(station);
@@ -276,7 +282,7 @@ public:
 			DrawObjectOnGround(objects[i], s.getPosition());
 		}
 
-
+		drawCrossHair();
 		
 		return true;
 	}
@@ -351,6 +357,25 @@ public:
 		double nwidth = width * (1 / (distance));
 
 		FillRect(xPos - nwidth / 2, yPos - nheight/2 + screenYWalkingOffset, nwidth, nheight, color);
+	}
+
+	void drawCrossHair() {
+		int segmentL = ScreenHeight() / 45;
+		int segmentS = ScreenWidth() / 75;
+
+		int offFromCenter = segmentL;
+
+		olc::Pixel color = olc::BLACK;
+
+		// Left
+		FillRect(ScreenWidth() / 2 - offFromCenter - segmentL/2, ScreenHeight() / 2 - segmentS/2, segmentL, segmentS, color);
+		//Right
+		FillRect(ScreenWidth() / 2 + offFromCenter, ScreenHeight() / 2 - segmentS/2, segmentL, segmentS, color);
+		//Top
+		FillRect(ScreenWidth() / 2 , ScreenHeight() / 2 - offFromCenter - segmentL/2, segmentS, segmentL, color);
+		// Bottom
+		FillRect(ScreenWidth() / 2, ScreenHeight() / 2 + offFromCenter - segmentL / 2, segmentS, segmentL, color);
+
 	}
 
 
