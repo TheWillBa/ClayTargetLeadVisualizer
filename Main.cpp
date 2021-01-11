@@ -32,6 +32,7 @@ Next Steps:
 
 
   -> Implement the shooting component
+  -> Draw minimap based on the original version?
   -> Then move the project into Unity/Unreal? (can use physics engines?)
 
 */
@@ -180,6 +181,10 @@ private:
 
 	int stepSound;
 
+	int gunHeight;
+	int gunWidth;
+	int triWidth;
+
 
 public:
 	FirstPersonTargetVisualizer()
@@ -211,6 +216,10 @@ public:
 		//objects.push_back(Vector2D(-30, 0));
 		//objects.push_back(Vector2D(0, -30));
 
+		gunHeight = ScreenHeight() * (1.5 / 5.0);
+		gunWidth = ScreenWidth() / 8;
+		triWidth = ScreenWidth() / 24;
+
 
 
 
@@ -229,6 +238,8 @@ public:
 
 		if (GetMouseWheel() > 0) s.rotateCounterClockwise(fElapsedTime);
 		if (GetMouseWheel() < 0) s.rotateClockwise(fElapsedTime);
+
+
 
 
 		if (GetKey(olc::Key::LEFT).bHeld || GetKey(olc::Key::A).bHeld) s.strafeLeft(fElapsedTime);
@@ -254,7 +265,7 @@ public:
 
 		Clear(olc::Pixel(154, 203, 255));
 
-
+		if (GetMouse(0).bHeld) DrawLine(ScreenWidth() / 2, ScreenHeight() - gunHeight, ScreenWidth() / 2, ScreenHeight() / 2, olc::RED);
 
 		facing = s.currentlyFacing();
 		//targetHeight += fElapsedTime * targetDecsentSpeed;;
@@ -283,6 +294,7 @@ public:
 		}
 
 		drawCrossHair();
+		drawGun();
 		
 		return true;
 	}
@@ -293,7 +305,7 @@ public:
 		return true;
 	}
 
-	void drawStation(LinearTargetStation* station) {
+	void drawStation(LinearTargetStation * station) {
 		LinearTarget t = station->getTarget();
 		Shooter& s = station->getShooter();
 
@@ -376,6 +388,21 @@ public:
 		// Bottom
 		FillRect(ScreenWidth() / 2, ScreenHeight() / 2 + offFromCenter - segmentL / 2, segmentS, segmentL, color);
 
+	}
+
+	void drawGun() {
+
+
+		FillRect(ScreenWidth() / 2 - gunWidth / 2, ScreenHeight() / 2 + (ScreenHeight()/2 - gunHeight), gunWidth, gunHeight, olc::DARK_GREY);
+		//Left
+		FillTriangle(ScreenWidth() / 2 - gunWidth / 2, ScreenHeight() / 2 + (ScreenHeight() / 2 - gunHeight),
+					 ScreenWidth() / 2 - gunWidth / 2, ScreenHeight(),
+					 ScreenWidth() / 2 - gunWidth / 2 - triWidth, ScreenHeight(), olc::DARK_GREY);
+
+		// Right
+		FillTriangle(ScreenWidth() / 2 + gunWidth / 2, ScreenHeight() / 2 + (ScreenHeight() / 2 - gunHeight),
+			ScreenWidth() / 2 + gunWidth / 2, ScreenHeight(),
+			ScreenWidth() / 2 + gunWidth / 2 + triWidth, ScreenHeight(), olc::DARK_GREY);
 	}
 
 
